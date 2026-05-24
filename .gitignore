@@ -15,7 +15,9 @@ Thumbs.db
 .env.*.local
 
 # Credentials
-config/mochar-credentials.md
+config/local/
+config/*credentials*.md
+config/*credentials*.json
 
 # Node
 node_modules/

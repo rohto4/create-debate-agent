@@ -6,7 +6,7 @@
 ## 前提
 
 このPJは「チャット上でエージェント同士を討論させて設計書の品質を向上させる」エージェントを製作する。
-Chutes プラットフォーム上で、4つのエージェント（討論3体 + まとめ役1体）を走行させる前提で技術スタックを整理する。
+チャット基盤は MoChat、LLM 実行基盤は Chutes、実装言語は Python を主対象として整理する。
 
 ---
 
@@ -15,7 +15,7 @@ Chutes プラットフォーム上で、4つのエージェント（討論3体 +
 | エージェント | 役割 | モデル（Chutes） | モード |
 |---|---|---|---|
 | **スキラー** | 技術最適化 + 堅牢性 | MiMo-V2.5-Pro | - |
-| **ホーク** | ユーザ視点 + 要件拡充 | DeepSeek V3.2 | thinking |
+| **ホーク** | ユーザ視点 + 要件拡充 | DeepSeek V3.2 TEE | thinking |
 | **キーパー** | セキュリティ + 法務 + 経理視点 | Kimi K2.5 TEE | thinking |
 | **メドラー** | 取りまとめ + 合意形成 | MiMo-V2.5-Pro | - |
 
@@ -29,11 +29,11 @@ Chutes プラットフォーム上で、4つのエージェント（討論3体 +
 - **用途**: 技術最適化、取りまとめ
 - **API**: Chutes 経由
 
-### 2.2 DeepSeek V3.2
+### 2.2 DeepSeek V3.2 TEE
 
 - **エージェント**: ホーク
 - **用途**: ユーザ視点の討論
-- **モード**: thinking（段階的推論）
+- **モード**: thinking（段階的推論。Chutes 上の有効化方法は実装前に確認する）
 - **API**: OpenAI互換（Chutes 経由）
 - **コンテキスト**: 128K tokens
 
@@ -41,7 +41,7 @@ Chutes プラットフォーム上で、4つのエージェント（討論3体 +
 
 - **エージェント**: キーパー
 - **用途**: セキュリティ、法務、経理視点の討論
-- **モード**: thinking（長期推論、Interleaved Thinking対応）
+- **モード**: thinking（長期推論、Interleaved Thinking対応。Chutes 上の有効化方法は実装前に確認する）
 - **API**: OpenAI互換（Chutes 経由）
 - **コンテキスト**: 256K tokens
 - **特徴**: int4 量子化版、300ステップ tool calling 対応
@@ -56,7 +56,7 @@ Chutes プラットフォーム上で、4つのエージェント（討論3体 +
 from openai import OpenAI
 
 # Chutes 経由で各モデルにアクセス
-client = OpenAI(api_key="...", base_url="https://chutes.ai/v1")
+client = OpenAI(api_key="...", base_url="https://llm.chutes.ai/v1")
 
 # スキラー（MiMo-V2.5-Pro）
 response = client.chat.completions.create(
@@ -64,9 +64,9 @@ response = client.chat.completions.create(
     messages=[...]
 )
 
-# ホーク（DeepSeek V3.2 thinking）
+# ホーク（DeepSeek V3.2 TEE thinking）
 response = client.chat.completions.create(
-    model="deepseek-ai/DeepSeek-V3.2",
+    model="deepseek-ai/DeepSeek-V3.2-TEE",
     messages=[...],
     extra_body={"chat_template_kwargs": {"thinking": True}}
 )
@@ -100,7 +100,7 @@ response = client.chat.completions.create(
   │  - 合意点                           │
   │  - 対立点                           │
   │  - 次の焦点（もしあれば）             │
-  │  - 判断（合意/保留/تصم�يم）        │
+  │  - 判断（合意/対立/保留）          │
   └─────────────────────────────────────┘
        │
        ├── 合意 → 結果をファイル出力
@@ -144,7 +144,7 @@ response = client.chat.completions.create(
        ▼
 [4つのエージェントに並行タスク配信]
        ├──► スキラー（MiMo-V2.5-Pro）
-       ├──► ホーク（DeepSeek V3.2 thinking）
+       ├──► ホーク（DeepSeek V3.2 TEE thinking）
        ├──► キーパー（Kimi K2.5 TEE thinking）
        └──► メドラー（MiMo-V2.5-Pro）※まとめ役
        │
@@ -177,6 +177,6 @@ response = client.chat.completions.create(
 ## 7. 未決定事項
 
 - [ ] 具体的な討論プロトコルの設計
-- [ ] チャット常駐の実現方式（Discord bot / Web UI / CLI）
+- [x] チャット常駐の初期方式（MoChat）
 - [ ] 討論結果の永続化形式
-- [ ] Chutes の API エンドポイントとモデル ID の確認
+- [ ] Chutes のモデル ID と thinking モード有効化方法の実機確認

@@ -19,7 +19,7 @@ docs/
     imp-plan.md
     imp-comp.md
     imp-wait.md
-    user-tasks.md
+    task-lists.md
   spec/
     README.md
     spec-summary.md

@@ -8,7 +8,9 @@
 - [use-cases.md](use-cases.md): 利用シーン候補（8つ、初期は2つに集中推奨）
 - [file-trigger-architecture.md](file-trigger-architecture.md): ファイルトリガー型アーキテクチャの実現可能性調査
 - [alternative-platforms.md](alternative-platforms.md): Slack/Discord以外の動作環境調査（MoChat、FloatIM等）
+- [slack-architecture.md](slack-architecture.md): Slack 動作環境案。MoChat 採用により候補資料として保持
 
 ## 確定済み
 
 - エージェント立場: スキラー、ホーク、キーパーの3体+メドラーで確定
+- 初期チャット基盤: MoChat

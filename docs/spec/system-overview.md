@@ -9,15 +9,19 @@
 | 名前 | 種類 | 場所 | 役割 |
 |---|---|---|---|
 | **ユーザー** | 人間 | 手元のPC | 議題を入力し、結果を受け取る |
-| **orchestrator.py** | Pythonプログラム | 手元のPC | 討論の流れを制御する舞台監督 |
-| **debate-monitor.py** | Pythonプログラム | 手元のPC | 討論の停滞を検知し、リセット機能を提供 |
+| **src/debate/orchestrator.py** | Pythonプログラム | 手元のPC | 討論の流れを制御する舞台監督 |
+| **src/debate/monitor.py** | Pythonプログラム | 手元のPC | 討論の停滞を検知し、リセット機能を提供 |
+| **src/debate/protocol.py** | Pythonプログラム | 手元のPC | ラウンド、発言順序、終了条件を定義する |
+| **src/debate/convergence.py** | Pythonプログラム | 手元のPC | メドラー出力を合意/対立/保留に正規化する |
+| **src/mochat/client.py** | Pythonプログラム | 手元のPC | MoChat API の送受信を担当する |
 | **スキラー** | LLMエージェント | Chutes API | 技術最適化 + 堅牢性 |
 | **ホーク** | LLMエージェント | Chutes API | ユーザ視点 + 要件拡充 |
 | **キーパー** | LLMエージェント | Chutes API | セキュリティ + 法務 + 経理 |
 | **メドラー** | LLMエージェント | Chutes API | 取りまとめ + 合意形成 |
 | **MoChat** | チャットプラットフォーム | mochat.io | 会話の舞台（掲示板） |
 | **Chutes API** | LLMプロバイダ | chutes.ai | 各エージェントの「脳」を提供 |
-| **config/** | 設定ファイル群 | 手元のPC | エージェント設定、API キー、MoChat 認証情報 |
+| **config/** | 設定ファイル群 | 手元のPC | エージェント設定。secret 本体は `config/local/` に分離する |
+| **config/local/** | ローカル認証情報 | 手元のPC | MoChat トークンなどの未公開情報。`.gitignore` で除外する |
 | **prompt-templates/** | テンプレート群 | 手元のPC | 各エージェントへのプロンプトテンプレート |
 | **logs/** | ログ出力 | 手元のPC | 討論履歴の記録 |
 | **docs/debate-results/** | 成果物 | 手元のPC | 討論結果のMarkdown出力 |
@@ -34,7 +38,7 @@ graph TB
     subgraph Local["💻 ユーザーの手元PC"]
         USER["👤 ユーザー"]
         ORCH["🎯 orchestrator.py<br/>（舞台監督）"]
-        CONFIG["⚙️ config/<br/>agents.yaml<br/>mochat-credentials.md"]
+        CONFIG["⚙️ config/<br/>agents.yaml"]
         LOGS["📋 logs/<br/>討論履歴"]
         DOCS["📄 design-docs/<br/>設計書"]
     end
@@ -45,7 +49,7 @@ graph TB
 
     subgraph Chutes["☁️ Chutes API"]
         MIMO["MiMo-V2.5-Pro"]
-        DS["DeepSeek V3.2"]
+        DS["DeepSeek V3.2 TEE"]
         KK["Kimi K2.5 TEE"]
     end
 
@@ -154,7 +158,7 @@ sequenceDiagram
 │  ┌──────────┐    ┌─────────────────────┐    ┌──────────────────┐   │
 │  │ 👤       │    │ 🎯 orchestrator.py  │    │ ⚙️ config/       │   │
 │  │ ユーザー  │───▶│ （舞台監督）         │◀──▶│ agents.yaml      │   │
-│  │          │◀───│                     │    │ credentials.md   │   │
+│  │          │◀───│                     │    │                  │   │
 │  └──────────┘    └──────────┬──────────┘    └──────────────────┘   │
 │       ▲                     │                                       │
 │       │                     ▼                                       │
@@ -196,7 +200,7 @@ sequenceDiagram
 │          mochat.send(session_id, response)           ← ②           │
 │                                                                     │
 │      history = mochat.get_messages(session_id)                      │
-│      summary = medler.summarize(history)                            │
+│      summary = mediator.summarize(history)                          │
 │      mochat.send(session_id, summary)                               │
 │                                                                     │
 └─────────────────────────────────────────────────────────────────────┘
@@ -207,7 +211,7 @@ sequenceDiagram
 │                    ☁️ Chutes API (chutes.ai)                        │
 │                                                                     │
 │  ┌────────────────┐ ┌────────────────┐ ┌────────────────┐          │
-│  │ MiMo-V2.5-Pro  │ │ DeepSeek V3.2  │ │ Kimi K2.5 TEE  │          │
+│  │ MiMo-V2.5-Pro  │ │DeepSeek V3.2 TEE│ │ Kimi K2.5 TEE  │          │
 │  │                │ │ (thinking)     │ │ (thinking)     │          │
 │  │ スキラー用     │ │ ホーク用       │ │ キーパー用     │          │
 │  │ メドラー用     │ │                │ │                │          │
@@ -295,7 +299,7 @@ sequenceDiagram
 | **logs/** | ログディレクトリ | 手元のPC | 討論履歴のバックアップと分析用データ |
 | **docs/debate-results/** | 成果物ディレクトリ | 手元のPC | 討論の成果物。設計書に反映する際の元ネタ |
 | **prompt-templates/** | テンプレートディレクトリ | 手元のPC | プロンプトの品質改善をコード変更なしで行う |
-| **debate-monitor.py** | 監視プログラム | 手元のPC | 討論の停滞を検知し、リセット機能を提供 |
+| **src/debate/monitor.py** | 監視プログラム | 手元のPC | 討論の停滞を検知し、リセット機能を提供 |
 
 ### config/agents.yaml
 
@@ -309,16 +313,31 @@ agents:
 
   hawk:
     name: "ホーク"
-    model: "deepseek-ai/DeepSeek-V3.2"
+    model: "deepseek-ai/DeepSeek-V3.2-TEE"
     mode: "thinking"
     system_prompt: "prompt-templates/hawk-system.md"
     temperature: 0.8
+
+  keeper:
+    name: "キーパー"
+    model: "moonshotai/Kimi-K2.5-TEE"
+    mode: "thinking"
+    system_prompt: "prompt-templates/keeper-system.md"
+    temperature: 0.6
+
+  mediator:
+    name: "メドラー"
+    model: "xiaomi/MiMo-V2.5-Pro"
+    system_prompt: "prompt-templates/mediator-system.md"
+    temperature: 0.5
 
 debate:
   max_rounds: 3
   output_dir: "docs/debate-results"
   reset_threshold: 0.8
 ```
+
+secret は `config/agents.yaml` に書かない。MoChat トークンや Chutes API キーは環境変数または `.gitignore` 済みの `config/local/` 配下から読み込む。
 
 **なぜ必要か:**
 - プロンプトの調整頻度が高い（討論の質はプロンプトに大きく依存する）
@@ -381,7 +400,7 @@ prompt-templates/
   skiller-system.md
   hawk-system.md
   keeper-system.md
-  medler-system.md
+  mediator-system.md
   discussion-round.md
 ```
 
@@ -397,7 +416,7 @@ prompt-templates/
 
 ### 概要
 
-讨论がうまく進んでいない場合、orchestrator.py が自動的に検知し、リセットや軌道修正を行う機能。
+討論がうまく進んでいない場合、orchestrator.py が自動的に検知し、リセットや軌道修正を行う機能。
 
 ### 停滞パターンと検知条件
 
@@ -482,7 +501,7 @@ def run_debate(session_id, topic):
             mochat.send(session_id, response)
 
         # メドラーが取りまとめ
-        summary = medler.summarize(history)
+        summary = mediator.summarize(history)
 
         # 停滞検知
         issues = monitor.check_stagnation(history)

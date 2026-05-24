@@ -48,7 +48,7 @@ PJ固有の方針は次の通りです: <PJ-POLICY>
    - `docs/imp/imp-plan.md`
    - `docs/imp/imp-comp.md`
    - `docs/imp/imp-wait.md`
-   - `docs/imp/user-tasks.md`
+   - `docs/imp/task-lists.md`
    - `docs/spec/README.md`
    - `docs/spec/spec-summary.md`
 6. 初期化資料一式を `docs/setting/` に残す。

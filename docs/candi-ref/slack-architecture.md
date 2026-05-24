@@ -1,6 +1,8 @@
-# Slack 動作環境仕様
+# Slack 動作環境案
 
 作成日: 2026-05-15
+
+> 2026-05-24 時点では MoChat を初期チャット基盤として採用するため、この文書は候補・代替案として保持する。
 
 ## 概要
 
@@ -23,7 +25,7 @@
 | コンポーネント | 技術 | 理由 |
 |---|---|---|
 | LLM SDK | **OpenAI SDK (Python)** | Chutes 経由で全モデル共通 |
-| API | **Chutes API** | MiMo-V2.5-Pro、DeepSeek V3.2、Kimi K2.5 TEE にアクセス |
+| API | **Chutes API** | MiMo-V2.5-Pro、DeepSeek V3.2 TEE、Kimi K2.5 TEE にアクセス |
 
 ### 1.3 オーケストレーション
 
@@ -70,14 +72,14 @@ graph TB
 
     subgraph Agents["🤖 エージェント群"]
         SK["スキラー<br/>MiMo-V2.5-Pro<br/>技術最適化"]
-        HK["ホーク<br/>DeepSeek V3.2<br/>ユーザ視点"]
+        HK["ホーク<br/>DeepSeek V3.2 TEE<br/>ユーザ視点"]
         KP["キーパー<br/>Kimi K2.5 TEE<br/>セキュリティ・法務"]
         MD["メドラー<br/>MiMo-V2.5-Pro<br/>取りまとめ"]
     end
 
     subgraph Chutes["☁️ Chutes API"]
         MIMO["MiMo-V2.5-Pro"]
-        DS["DeepSeek V3.2"]
+        DS["DeepSeek V3.2 TEE"]
         KK["Kimi K2.5 TEE"]
     end
 

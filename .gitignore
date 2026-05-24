@@ -16,8 +16,13 @@ Thumbs.db
 
 # Credentials
 config/local/
+!config/local/
+!config/local/*.example.json
+config/local/*
+!config/local/*.example.json
 config/*credentials*.md
 config/*credentials*.json
+!config/local/*.example.json
 
 # Node
 node_modules/
